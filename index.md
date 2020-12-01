@@ -1,4 +1,24 @@
-## Welcome to GitHub Pages
+## Small Data: how to speed up your Application without the need for Big Data Technologies
+### or: boost yourself to boost your code
+
+
+The following work deals with performance issues in an existing program for data extraction from an API for timeseries measurement values. The code was growing over time and has therefore never been rethought to improve it from a basis. In addition, no performance analysis has ever been conducted for this piece of code.
+
+The following work is showing how and how much I could improve...
+
+*...the performance of data retrieval via REST API*
+
+*...parsing of JSON encoded timeseries data*
+
+*...and saving it into a .csv file?*
+
+
+
+![Image of Workflow](https://github.com/diewaldnicole/dsia_big_data/blob/gh-pages/flowchart_small_data.png)
+
+
+
+# delete
 
 You can use the [editor on GitHub](https://github.com/diewaldnicole/dsia_big_data/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
 
