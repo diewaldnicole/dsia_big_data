@@ -1,5 +1,5 @@
 # Small Data
-## How to speed up your Application without the need for Big Data Technologies?
+## How to speed up your application without the need for big data technologies?
 
 The following work deals with performance issues in an existing program for data extraction from an API for timeseries measurement values. The code was growing over time and has therefore never been rethought to improve it from a basis. In addition, no performance analysis has ever been conducted for this piece of code.
 
@@ -24,7 +24,7 @@ I tried capture only the most important parts of the code samples and not to rep
 
 ## Benchmark
 In order to have a baseline for comparison, at first the existing functions used are shown. This includes:
-- function for the api request (datapi_channels_fields)
+- function for the api request (datapi_channels_fields) (*not shown here*)
 - function for parsing (parse_json)
 - main function (baseline)
 
@@ -46,7 +46,6 @@ def parse_json(j):
     return data_twodays
 ```
 
-
 ```python
 def baseline(days):
     # loop over list with startdates
@@ -55,10 +54,6 @@ def baseline(days):
         delta = (requ_end + datetime.timedelta(minutes=1) -requ_start).days
         # get data from api
         j = datapi_channels_fields(requ_start, requ_end, channels, pvsystemid)
-        
-        # check output
-        if j['Records'] == []:
-            continue
 
         # get tz
         olson_tz = tz.gettz(j['Olson'])
@@ -80,9 +75,13 @@ In order to improve the performance of this application, at first it has to be f
 
 Firstly, the time horizon for the request is varied - so that not only just two days at once are retrieved from the API, but also longer time horizons. Therefore, the initial program is adapted to enable this time horizons instead of a hard coded two days interval. **The 2_days result is the benchmark for the analysis**.
 
-```markdown
-*code*
+```python
+# define a list of varying time horizons for the request
+days_list = [1, 2, 7, 14, 30, 60, 120]
+days_names = [str(d) + '_days' for d in days_list]
+days_names
 ```
+    ['1_days', '2_days', '7_days', '14_days', '30_days', '60_days', '120_days']
 
 The table below shows the difference of the time needed for the API request as well as for parsing, for varying time horizons from 1 day to 120 days within one request:
 - api_per_day_s are the seconds needed to get the data from the api for one day (mean)
@@ -103,6 +102,8 @@ The table below shows the difference of the time needed for the API request as w
     | 60_days  |        0.392523 |            0.551602 |     140.68  |         212.32  |      1.50924  |   353.001 |
     | 120_days |        0.452316 |            0.611337 |     141.047 |         251.768 |      1.785    |   392.815 |
     +----------+-----------------+---------------------+-------------+-----------------+---------------+-----------+
+    
+*TODO: update table and include plots!!*
 
 The diagrams above show a request of **60 days** as the best option. (Altough there is not a really clear trend). The time needed for a request is increasing again for 120 days.
 
@@ -157,6 +158,53 @@ The procedure of the initial parsing solution works as follows:
 7. At the end, missing timestamps are filled with NaN values and the timezone is changed to local time for the overall dataframe.
 
 As an improvement, a performance comparison is made by replacing the use of the **pandas "at"** function. Instead, the data is being **parsed in a dictionary** and transformed to a dataframe in the end. For the experiment, a locally saved JSON file is read in which is equal to the data requested via the API.
+
+
+```python
+# new function to parse the json string with dict
+def parse_json_new(j):
+    data_twodays = {}
+    for a in j['Records']:
+        if a['Value'] is not None:
+            try:
+                rec_key = str(a['ChannelType'] + '_' + str(a['NodeType']) + str(' [') + str(a['Value']['Unit']) + ']')            
+                data_twodays[rec_key].update(
+                    {str(datetime.datetime.strptime(a['LogDt'], "%Y-%m-%dT%H:%M:%SZ")): a['Value']['Value'],                    }
+                    )
+            except KeyError:
+                data_twodays[rec_key] = {}
+            
+    data_twodays = pd.DataFrame(data_twodays)
+    return data_twodays
+```
+
+The new parsing is tested by using an offline saved .json export for reproducability of this part of the analysis. The file contains two days of data and is available in the repository. Following code is used to compare the time needed by the parsing functions:
+
+```python
+with open ('test_json_2d.txt') as f:
+    j = json.load(f)
+
+faster = []
+for x in range(0,100):
+    starttime_parsing = timeit.default_timer()
+    df, interval = parse_json_new(j)
+    parse_json_new_time = timeit.default_timer() - starttime_parsing
+
+    starttime_parsing = timeit.default_timer()
+    df_base, interval = parse_json(j)
+    parse_json_base = timeit.default_timer() - starttime_parsing
+
+    faster.append(parse_json_base/parse_json_new_time)
+    
+print(f'{np.mean(faster)} times faster!!')
+```
+
+    25.576689731084194 times faster!!
+    
+*TODO: include histogram plot and check numbers below*
+
+The code above conducted the parsing procedure 100 times since the performance is varying heavily in each iteration. It parses in each iteration once with the baseline parsing function and once with the new one. Then, it adds the time ration between the new and the old function to a list. The outcome is printed and also shown in the histogram plot: the new version is around **25 times faster in parsing** compared to the old one.
+Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing!
 
 ### Improve overall Performance by using Parallel Computation
 
