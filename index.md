@@ -1,4 +1,5 @@
-# Small Data: how to speed up your Application without the need for Big Data Technologies
+# Small Data
+## How to speed up your Application without the need for Big Data Technologies?
 
 The following work deals with performance issues in an existing program for data extraction from an API for timeseries measurement values. The code was growing over time and has therefore never been rethought to improve it from a basis. In addition, no performance analysis has ever been conducted for this piece of code.
 
@@ -111,7 +112,7 @@ An additional improvement in performance is expected if the process can be paral
 
 The block below uses the multiprocessing package to get the number of cores available on the hardware.
 
-```markdown
+```python
 import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
@@ -122,7 +123,7 @@ print(f'{num_cores} Cores available!')
 
 ### Using Dask
 
-### Saving to .csv¶
+### Saving to .csv
 
 ## Summary and Conclusion
 ### General
