@@ -1,4 +1,4 @@
-![fast]('anders-jilden--N2UXcPBIYI-unsplash_small.png')
+![fast]('anders-jilden--N2UXcPBIYI-unsplash_small.jpg')
 
 # Small Data
 ## How to speed up your application without the need for big data technologies?
