@@ -33,81 +33,43 @@ The script is based on some older version starting from a time with no python kn
 The **benchmark time** for this initial version can be found in the later chapter 1.2.1.
 
 ```python
-# function to parse the json string
 def parse_json(j):
-    # define complete array with timestamps
-    interval = datetime.timedelta(minutes=30)
-    interval_current = datetime.timedelta(minutes=datetime.datetime.strptime(j['Records'][2]['TargetDuration'], '%H:%M:%S').time().minute)
-    if interval_current < interval:
-        interval = interval_current
     data_twodays = pd.DataFrame()
-
     for a in j['Records']:
         if a['Value'] is not None:
-            rec_deviceid = a['DeviceId']
-
             rec_key = str(a['ChannelType'] + '_' + str(a['NodeType']) + str(' [') + str(a['Value']['Unit']) + str(']'))
             rec_value = a['Value']['Value']
             rec_logdt_dt = datetime.datetime.strptime(a['LogDt'], '%Y-%m-%dT%H:%M:%SZ')
             rec_logdt_UTC = rec_logdt_dt.replace(tzinfo=tz.tzutc())
             data_twodays.at[rec_logdt_UTC, rec_key] = rec_value
 
-    return data_twodays, interval
+    return data_twodays
 ```
 
 
 ```python
 def baseline(days):
-    startdate_list=[]
-    for x in range(0, (timespan)):
-        startdate_list.append([datetime.datetime.combine(start_day, datetime.time(0, 0)) + period*x][0])
-
-##########################################################################################################
     # loop over list with startdates
     for requ_start in startdate_list:
         requ_end = requ_start + period - datetime.timedelta(minutes=1)
-        if requ_end.date() > until_day:
-            print('yes')
-            requ_end = datetime.datetime.combine(until_day, datetime.time(23, 59))
-        # print(f'{requ_start} to {requ_end}')
         delta = (requ_end + datetime.timedelta(minutes=1) -requ_start).days
-        # request from api
-        starttime = timeit.default_timer()
+        # get data from api
         j = datapi_channels_fields(requ_start, requ_end, channels, pvsystemid)
-        end_api_requ = timeit.default_timer() - starttime
-        soa_api_requ.append([end_api_requ])
-        soa_api_requ_days.append([end_api_requ/delta])
-
+        
         # check output
         if j['Records'] == []:
             continue
 
         # get tz
         olson_tz = tz.gettz(j['Olson'])
-
-        #print(j)
         
         # parse json to data frame & add timezone info (UTC)
-        starttime_parsing = timeit.default_timer()
-        data_twodays, interval = parse_json(j)
-        end_parse = timeit.default_timer() - starttime_parsing
-        soa_parsing.append([end_parse])
-        soa_parsing_days.append([end_parse/delta])
+        data_twodays = parse_json(j)
 
         # add to overall data frame
         df_all = pd.concat([df_all, data_twodays], sort=True)
 
-    ######################################################################################################################
-    # fill missing timestamps
-    test = pd.date_range(start=min(df_all.index), freq=interval, end=max(df_all.index))
-
-    df_all=df_all.reindex(index=test)
-
-    # convert to local time
-    df_all = df_all.tz_convert(olson_tz)
-    df_all.index.name = "DateTime"
-    
-    return df_all, soa_api_requ, soa_parsing, soa_api_requ_days, soa_parsing_days
+    return df_all
 ```
 
 ## Performance improvements
