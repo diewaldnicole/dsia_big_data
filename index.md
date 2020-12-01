@@ -13,14 +13,17 @@ The following work is showing how and how much I could improve...
 
 ![png](flowchart_small_data.png)
 
-**Initial Thoughts and Plan:** 
+### Initial Thoughts and Plan
 - Analysis of the state of the Art - which part takes how much time?
 - Improve Performance of REST API request by varying request time horizons
 - Improve parsing of json files
 - Improve overall Performance by using Multithreading
 
+### Thinking... I am already bored, so why should I read this?
+I tried capture only the most important parts of the code samples and not to repeat anything. Therefore the code examples will not work as they are. Find the corresponding jupyter notebook in the Github repository. However, this is still not the most astonishing story to read. To make it easier: you can scan through it and find the most important points in **bold**. Or you go directly down to the summary to get the key findings.
+
 ## Benchmark
-In order to have a baseline for comparison, at first the existing functions used are shown. THis includes:
+In order to have a baseline for comparison, at first the existing functions used are shown. This includes:
 - function for the api request (datapi_channels_fields)
 - function for parsing (parse_json)
 - main function (baseline)
@@ -55,27 +58,11 @@ def parse_json(j):
 
 ```python
 def baseline(days):
-
-    filename = pvsystemid + '.csv'
-
-    #######################################################################################################################
-    # init arrays for request timestamp
-    timespan=int(np.ceil((until_day + datetime.timedelta(days=1) - start_day).days/days))
-    print(timespan)
-    period=datetime.timedelta(days = days, hours=0, minutes=0)
-    print(period)
     startdate_list=[]
     for x in range(0, (timespan)):
         startdate_list.append([datetime.datetime.combine(start_day, datetime.time(0, 0)) + period*x][0])
 
-    # init data frame for export (overall data)
-    df_all = pd.DataFrame()
-    ######################################################################################################################
-    soa_api_requ = []
-    soa_parsing = []
-    soa_parsing_days = []
-    soa_api_requ_days = []
-    #print(startdate_list)
+##########################################################################################################
     # loop over list with startdates
     for requ_start in startdate_list:
         requ_end = requ_start + period - datetime.timedelta(minutes=1)
