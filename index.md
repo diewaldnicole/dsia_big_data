@@ -11,7 +11,7 @@ The following work is showing how and how much I could improve...
 
 *...and saving it into a .csv file?*
 
-![png](https://github.com/diewaldnicole/dsia_big_data/blob/gh-pages/flowchart_small_data.png)
+![png](flowchart_small_data.png)
 
 **Initial Thoughts and Plan:** 
 - Analysis of the state of the Art - which part takes how much time?
