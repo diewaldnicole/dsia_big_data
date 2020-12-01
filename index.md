@@ -231,6 +231,9 @@ print(f'{num_cores} Cores available!')
 ### General
 ### Boost yourself to boost your code
 
+![thoughtful](raymond-revaldi-QA6z7PtEeig-unsplash.jpg)
+
+
 
 # delete
 
