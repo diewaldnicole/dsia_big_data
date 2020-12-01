@@ -11,7 +11,7 @@ The following work is showing how and how much I could improve...
 
 *...and saving it into a .csv file?*
 
-![Image of Workflow](https://github.com/diewaldnicole/dsia_big_data/blob/gh-pages/flowchart_small_data.png)
+![png](https://github.com/diewaldnicole/dsia_big_data/blob/gh-pages/flowchart_small_data.png)
 
 **Initial Thoughts and Plan:** 
 - Analysis of the state of the Art - which part takes how much time?
@@ -28,6 +28,100 @@ In order to have a baseline for comparison, at first the existing functions used
 The script is based on some older version starting from a time with no python knowledge at all, and and was evolving over time. For example, is was taken as a given fact that only two days at once can be retrieved from the API, based on an older version of this API. However, this restriction changed and also longer time horizons can be retrieved at once now. The 'baseline' function above is already adapted so that it supports later used varying time horizons (days to request at once).
 
 The **benchmark time** for this initial version can be found in the later chapter 1.2.1.
+
+```python
+# function to parse the json string
+def parse_json(j):
+    # define complete array with timestamps
+    interval = datetime.timedelta(minutes=30)
+    interval_current = datetime.timedelta(minutes=datetime.datetime.strptime(j['Records'][2]['TargetDuration'], '%H:%M:%S').time().minute)
+    if interval_current < interval:
+        interval = interval_current
+    data_twodays = pd.DataFrame()
+
+    for a in j['Records']:
+        if a['Value'] is not None:
+            rec_deviceid = a['DeviceId']
+
+            rec_key = str(a['ChannelType'] + '_' + str(a['NodeType']) + str(' [') + str(a['Value']['Unit']) + str(']'))
+            rec_value = a['Value']['Value']
+            rec_logdt_dt = datetime.datetime.strptime(a['LogDt'], '%Y-%m-%dT%H:%M:%SZ')
+            rec_logdt_UTC = rec_logdt_dt.replace(tzinfo=tz.tzutc())
+            data_twodays.at[rec_logdt_UTC, rec_key] = rec_value
+
+    return data_twodays, interval
+```
+
+
+```python
+def baseline(days):
+
+    filename = pvsystemid + '.csv'
+
+    #######################################################################################################################
+    # init arrays for request timestamp
+    timespan=int(np.ceil((until_day + datetime.timedelta(days=1) - start_day).days/days))
+    print(timespan)
+    period=datetime.timedelta(days = days, hours=0, minutes=0)
+    print(period)
+    startdate_list=[]
+    for x in range(0, (timespan)):
+        startdate_list.append([datetime.datetime.combine(start_day, datetime.time(0, 0)) + period*x][0])
+
+    # init data frame for export (overall data)
+    df_all = pd.DataFrame()
+    ######################################################################################################################
+    soa_api_requ = []
+    soa_parsing = []
+    soa_parsing_days = []
+    soa_api_requ_days = []
+    #print(startdate_list)
+    # loop over list with startdates
+    for requ_start in startdate_list:
+        requ_end = requ_start + period - datetime.timedelta(minutes=1)
+        if requ_end.date() > until_day:
+            print('yes')
+            requ_end = datetime.datetime.combine(until_day, datetime.time(23, 59))
+        # print(f'{requ_start} to {requ_end}')
+        delta = (requ_end + datetime.timedelta(minutes=1) -requ_start).days
+        # request from api
+        starttime = timeit.default_timer()
+        j = datapi_channels_fields(requ_start, requ_end, channels, pvsystemid)
+        end_api_requ = timeit.default_timer() - starttime
+        soa_api_requ.append([end_api_requ])
+        soa_api_requ_days.append([end_api_requ/delta])
+
+        # check output
+        if j['Records'] == []:
+            continue
+
+        # get tz
+        olson_tz = tz.gettz(j['Olson'])
+
+        #print(j)
+        
+        # parse json to data frame & add timezone info (UTC)
+        starttime_parsing = timeit.default_timer()
+        data_twodays, interval = parse_json(j)
+        end_parse = timeit.default_timer() - starttime_parsing
+        soa_parsing.append([end_parse])
+        soa_parsing_days.append([end_parse/delta])
+
+        # add to overall data frame
+        df_all = pd.concat([df_all, data_twodays], sort=True)
+
+    ######################################################################################################################
+    # fill missing timestamps
+    test = pd.date_range(start=min(df_all.index), freq=interval, end=max(df_all.index))
+
+    df_all=df_all.reindex(index=test)
+
+    # convert to local time
+    df_all = df_all.tz_convert(olson_tz)
+    df_all.index.name = "DateTime"
+    
+    return df_all, soa_api_requ, soa_parsing, soa_api_requ_days, soa_parsing_days
+```
 
 ## Performance improvements
 
@@ -49,12 +143,6 @@ The table below shows the difference of the time needed for the API request as w
 - parsing/api is the ratio between parsing and the api duration sums
 - summe_s is the overall sum to get the data back as a data frame
 
-
-
-```python
-print(tabulate(df_timer, headers='keys', tablefmt='psql'))
-```
-
     +----------+-----------------+---------------------+-------------+-----------------+---------------+-----------+
     |          |   api_per_day_s |   parsing_per_day_s |   api_sum_s |   parsing_sum_s |   parsing/api |   summe_s |
     |----------+-----------------+---------------------+-------------+-----------------+---------------+-----------|
@@ -66,11 +154,7 @@ print(tabulate(df_timer, headers='keys', tablefmt='psql'))
     | 60_days  |        0.392523 |            0.551602 |     140.68  |         212.32  |      1.50924  |   353.001 |
     | 120_days |        0.452316 |            0.611337 |     141.047 |         251.768 |      1.785    |   392.815 |
     +----------+-----------------+---------------------+-------------+-----------------+---------------+-----------+
-    
-    
-```markdown
-include table and diagrams
-```
+
 The diagrams above show a request of **60 days** as the best option. (Altough there is not a really clear trend). The time needed for a request is increasing again for 120 days.
 
 ###  Improve parsing of json files
