@@ -213,7 +213,7 @@ Looking back at the table from the varying time horizons, this means an improvem
 
 ### Improve overall Performance by using Parallel Computation
 
-An additional improvement in performance is expected if the **process can be parallelized**. Therefore, parallelization based on a Medium article (https://medium.com/@mjschillawski/quick-and-easy-parallelization-in-python-32cb9027e490) is tested, using the **Parallel package**.
+An additional improvement in performance is expected if the **process can be parallelized**. Therefore, parallelization based on a [Medium article](https://medium.com/@mjschillawski/quick-and-easy-parallelization-in-python-32cb9027e490) is tested, using the **Parallel package**.
 
 The block below uses the multiprocessing package to show the number of cores available on the hardware.
 
@@ -237,8 +237,8 @@ processed_list = Parallel(n_jobs=num_cores)(delayed(my_function(i,parameters) fo
 
 The functionalilty is explained in the artice as follows:
  
->"*delayed(my_function(i,parameters) for i in inputs) behind the scenes creates tuple of the function, i, and the parameters, one for each iteration. Delayed creates these >tuples, then Parallel will pass these to the interpreter.
->Parallel(n_jobs=num_cores) does the heavy lifting of multiprocessing. Parallel forks the Python interpreter into a number of processes equal to the number of jobs (and by >extension, the number of cores available). Each process will run one iteration, and return the result.*"
+> "*delayed(my_function(i,parameters) for i in inputs) behind the scenes creates tuple of the function, i, and the parameters, one for each iteration. Delayed creates these tuples, then Parallel will pass these to the interpreter.
+> Parallel(n_jobs=num_cores) does the heavy lifting of multiprocessing. Parallel forks the Python interpreter into a number of processes equal to the number of jobs (and by extension, the number of cores available). Each process will run one iteration, and return the result.*"
 
 In the actual example, it is considered the best solution to parallelize a whole iteration, including the api request and parsing. So, **one parallelized computaion includes the computions for one startdate** in the list of startdates. This means that *startdate_list* is the *inputs* for the code sample above.
 
@@ -311,11 +311,50 @@ print(tabulate(df_timer, headers='keys', tablefmt='psql'))
     +---------+----------------+
     
     
-//TODO insert result timer!
-
+// TODO_UPDATE
 So the code had to be adapted a little bit to enable the parallel computation. However, the changes where rather small and it can be seen that the time needed for the overall procedure could be **decreased to a half**! 
 
 ### Using Dask
+Another possibility to make use of parallel computation is using the **Dask Package**. It works together with familiar python packages such as numpy, pandas, or scikit learn and is therefore very easy to use. An **example how dask can be use with pandas** can be seen in the [documentation](https://docs.dask.org/en/latest/dataframe.html) and is summarized as follows:
+
+> **Design**
+> Dask DataFrames coordinate many Pandas DataFrames/Series arranged along the index. A Dask DataFrame is partitioned row-wise, grouping rows by index value for efficiency. These Pandas objects may live on disk or on other machines.
+
+![dask](dask_pandas.png)
+
+> **Dask DataFrame copies the Pandas API**
+> Because the dask.dataframe application programming interface (API) is a subset of the Pandas API, it should be familiar to Pandas users. There are some slight alterations due to the parallel nature of Dask:
+
+![dask](dask_pandas2.png)
+
+For the actual example, instead of using the dask API to the dataframe, we use the **delayed function**, since we want to parallelize a whole for loop with multiple steps. There is again a very straightforward explanation in the [documentation](https://docs.dask.org/en/latest/delayed.html):
+
+> Sometimes problems don’t fit into one of the collections like dask.array or dask.dataframe. In these cases, users can parallelize custom algorithms using the simpler dask.delayed interface. This allows one to create graphs directly with a light annotation of normal python code:
+
+![dask](dask_delayed.png)
+
+The syntax is very similar to the parallel package and can be implemented as is the snippet below:
+
+```python
+    results = []
+    for i in tqdm(startdate_list):
+        y = dask.delayed(parallelized)(i,period)
+        results.append(y)
+
+    results = dask.compute(*results)
+    
+    df_all = pd.concat(results)
+```
+
+Computation time for the whole computation:
+    +---------+----------------+
+    |         |   summe_func_s |
+    |---------+----------------|
+    | 60_days |        78.2897 |
+    +---------+----------------+
+    
+    
+The result is similar to the one from the parallel package, but some seconds slower. So for this strategy for making use of parallel computation both packages are very useful and almost equally fast. For other use cases where directly a pandas dataframe computation should be speeded up, dask seems very easy to use.
 
 ### Saving to .csv
 
