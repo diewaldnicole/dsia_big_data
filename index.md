@@ -346,17 +346,44 @@ The syntax is very similar to the parallel package and can be implemented as is 
     df_all = pd.concat(results)
 ```
 
-Computation time for the whole computation:
+Computation time for the whole request and parsing process:
+
+```
     +---------+----------------+
     |         |   summe_func_s |
     |---------+----------------|
     | 60_days |        78.2897 |
     +---------+----------------+
+```
     
-    
-The result is similar to the one from the parallel package, but some seconds slower. So for this strategy for making use of parallel computation both packages are very useful and almost equally fast. For other use cases where directly a pandas dataframe computation should be speeded up, dask seems very easy to use.
+The **result is similar to the one from the Parallel package**, but some seconds slower. So for this strategy for making use of parallel computation both packages are **very useful and almost equally fast**. For other use cases where directly a pandas dataframe computation should be speeded up, dask seems very easy to use. We will try this when saving the data to a .csv file.
 
 ### Saving to .csv
+Here follows a slow chapter on saving the dataframe to a .csv file on the disk.
+
+**Benchmark**
+The benchmark used the standard *pd.to_csv* function to save the file. The computation time is shown below.
+
+```python
+starttime = timeit.default_timer()
+
+# save file
+print("saving...")
+df_all.to_csv(filename, sep=';', decimal=',')
+print("DONE")
+
+soa_saving = timeit.default_timer() - starttime
+print(soa_saving)
+```
+
+    saving...
+    DONE
+    2.132442699999956
+    
+**Using Dask**
+We want to check if we can speed the process up by using the Dask API for pandas dataframe:
+
+
 
 ## Summary and Conclusion
 ### General
