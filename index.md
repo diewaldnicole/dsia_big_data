@@ -3,9 +3,9 @@
 # Small Data
 ## How to speed up your application without the need for big data technologies?
 
-The following work deals with performance issues in an existing program for data extraction from an API for timeseries measurement values. The code was growing over time and has therefore never been rethought to improve it from a basis. In addition, no performance analysis has ever been conducted for this piece of code.
+The following work deals with performance issues in an existing program for data extraction from an API for timeseries measurement values. The baseline code was growing over time and has therefore never been rethought to improve it from a basis. In addition, no performance analysis has ever been conducted for it.
 
-The following work is showing how and how much I could improve...
+The work is showing how and how much I could improve...
 
 *...the performance of data retrieval via REST API*
 
@@ -17,20 +17,20 @@ The following work is showing how and how much I could improve...
 
 ### Initial Thoughts and Plan
 - Analysis of the state of the Art - which part takes how much time?
-- Improve Performance of REST API request by varying request time horizons
+- Improve performance of REST API request by varying request time horizons
 - Improve parsing of json files
 - Improve overall Performance by using Multithreading
 
-### Thinking... I am already bored, so why should I read this?
-I tried capture only the most important parts of the code samples and not to repeat anything. Therefore the code examples will not work as they are. Find the corresponding jupyter notebook in the Github repository. However, this is still not the most astonishing story to read. To make it easier: you can scan through it and find the most important points in **bold**. Or you go directly down to the summary to get the key findings.
+#### For those thinking... I am already bored, so why should I read this?
+I tried capture only the most important parts of the code samples and not to repeat anything. Therefore the code examples will not work as they are in this article. Find the corresponding jupyter notebook in the Github repository. However, this is still not the most astonishing story to read. To make it easier: you can scan through it and find the most important points in **bold**. Or you go directly down to the summary to get the key findings.
 
 ## Benchmark
-In order to have a baseline for comparison, at first the existing functions used are shown. This includes:
+In order to have a **baseline for comparison**, at first the existing functions used are shown. This includes:
 - function for the api request (datapi_channels_fields) (*not shown here*)
 - function for parsing (parse_json)
 - main function (baseline)
 
-The script is based on some older version starting from a time with no python knowledge at all, and and was evolving over time. For example, is was taken as a given fact that only two days at once can be retrieved from the API, based on an older version of this API. However, this restriction changed and also longer time horizons can be retrieved at once now. The 'baseline' function above is already adapted so that it supports later used varying time horizons (days to request at once).
+The script is based on an older version starting from a time with no python knowledge at all, and and was evolving over time. For example, is was taken as a given fact that only two days at once can be retrieved from the API, based on an older version of this API. However, this restriction changed and also longer time horizons can be retrieved at once now. The 'baseline' function is already adapted in a way so that it supports later used varying time horizons (days to request at once).
 
 The **benchmark time** for this initial version can be found in the later chapter 1.2.1.
 
@@ -71,11 +71,11 @@ def baseline(days):
 
 ## Performance improvements
 
-In order to improve the performance of this application, at first it has to be found out which part takes longest and a benchmark has to be set. Therefore, the Python **"timeit"** module is used to track the durations of the request itself as well as the parsing. This task is combined with the first analysis of possible improvements:
+In order to improve the performance of this application, at first it has to be found out **which part takes longest** and a benchmark has to be set. Therefore, the Python **"timeit"** module is used to track the durations of the request itself as well as the parsing. This task is combined with the first analysis of possible improvements:
 
 ### Improve Performance of REST API request by varying request time horizons
 
-Firstly, the time horizon for the request is varied - so that not only just two days at once are retrieved from the API, but also longer time horizons. Therefore, the initial program is adapted to enable this time horizons instead of a hard coded two days interval. **The 2_days result is the benchmark for the analysis**.
+Firstly, the **time horizon for the request is varied** - so that not only just two days at once are retrieved from the API, but also longer time horizons. Therefore, the initial baseline function is adapted to enable this time horizons instead of a hard coded two days interval. **The 2_days result is the benchmark for the analysis**.
 
 ```python
 # define a list of varying time horizons for the request
@@ -85,33 +85,26 @@ days_names
 ```
     ['1_days', '2_days', '7_days', '14_days', '30_days', '60_days', '120_days']
 
-The table below shows the difference of the time needed for the API request as well as for parsing, for varying time horizons from 1 day to 120 days within one request:
-- api_per_day_s are the seconds needed to get the data from the api for one day (mean)
-- parsing_per_day_s are the seconds needed to parse the data for one day (mean)
-- api_sum_s is the overall time taken by the api request (sum)
-- parsing_sum_s is the overall time taken for parsing (sum)
-- parsing/api is the ratio between parsing and the api duration sums
-- summe_s is the overall sum to get the data back as a data frame
+The table below shows the difference of the time needed for the **API request** as well as for **parsing**, for **varying time horizons from 1 day to 120 days** within one request:
+- *api_per_day_s* are the seconds needed to get the data from the api for one day (mean)
+- *parsing_per_day_s* are the seconds needed to parse the data for one day (mean)
+- *api_sum_s* is the overall time taken by the api request (sum)
+- *parsing_sum_s* is the overall time taken for parsing (sum)
+- *parsing/api* is the ratio between parsing and the api duration sums
+- *summe_s* is the overall sum to get the data back as a data frame
 
-    +----------+-----------------+---------------------+-------------+-----------------+---------------+-----------+
-    |          |   api_per_day_s |   parsing_per_day_s |   api_sum_s |   parsing_sum_s |   parsing/api |   summe_s |
-    |----------+-----------------+---------------------+-------------+-----------------+---------------+-----------|
-    | 1_days   |        0.799743 |            0.398334 |     292.706 |         145.79  |      0.498078 |   438.496 |
-    | 2_days   |        0.561995 |            0.457617 |     205.69  |         167.488 |      0.814273 |   373.178 |
-    | 7_days   |        0.463274 |            0.434537 |     167.204 |         159.471 |      0.953754 |   326.675 |
-    | 14_days  |        0.432004 |            0.388936 |     157.535 |         142.91  |      0.907161 |   300.445 |
-    | 30_days  |        0.414554 |            0.538641 |     146.972 |         193.557 |      1.31696  |   340.529 |
-    | 60_days  |        0.392523 |            0.551602 |     140.68  |         212.32  |      1.50924  |   353.001 |
-    | 120_days |        0.452316 |            0.611337 |     141.047 |         251.768 |      1.785    |   392.815 |
-    +----------+-----------------+---------------------+-------------+-----------------+---------------+-----------+
-    
-*TODO: update table and include plots!!*
+![png](time_horizons.png)
 
+A | B
+- | - 
+![alt](th_per_day.png) | ![alt](th_sum.png)
+
+TODO: UPDATE plots and explanation! 
 The diagrams above show a request of **60 days** as the best option. (Altough there is not a really clear trend). The time needed for a request is increasing again for 120 days.
 
 ###  Improve parsing of json files
 
-The JSON string retrieved from the API is nested and therefore not easy to parse to a tabular format, as seen in the example below:
+The JSON string retrieved from the API is **nested** and therefore not easy to parse to a tabular format as needed in the exports. Here is an example:
 
 ``` markdown
 {
@@ -146,12 +139,12 @@ The JSON string retrieved from the API is nested and therefore not easy to parse
 
 It contains the "Records" with all the required data, and the **timezone** ("Olson"). The timezone is needed to convert the data to local time from UTC. One **ChannelType** should be one column, the **LogDt** should be the datetime index. There is also a **NodeType** which enumerates the number of the inverter in the PvSystem. If there are multiple inverters in the system, the UACMeanL1 channel exists multiple times, once for each inverter and therefore there must be a column in the dataframe depending on the ChannelType AND NodeType combination. Also the **Unit** is an important information to be added to the export file.
 
-The procedure of the initial parsing solution works as follows:
+The **procedure of the initial solution** works as follows:
 1. data of two days is requested
 2. JSON is given to the parsing function
 3. the time interval (can be 5, 15 or 30 minutes) is read from the first entries
 4. an empty dataframe for the two days data is initiated
-5. a for loop iterates over each "Records" entry in the JSON string
+5. a *for* loop iterates over each "Records" entry in the JSON string:
     - it defines a columns key with the ChannelType, NodeType and Unit of the record
     - it uses the LogDt as the index for the record
     - it adds utc timezone info to every LogDt
@@ -159,7 +152,7 @@ The procedure of the initial parsing solution works as follows:
 6. the dataframe is returned to the main function and there concatenated to the dataframe containing all the values (attaching two more days of data in each loop)
 7. At the end, missing timestamps are filled with NaN values and the timezone is changed to local time for the overall dataframe.
 
-As an improvement, a performance comparison is made by replacing the use of the **pandas "at"** function. Instead, the data is being **parsed in a dictionary** and transformed to a dataframe in the end. For the experiment, a locally saved JSON file is read in which is equal to the data requested via the API.
+As an **improvement strategy**, a performance comparison is made by replacing the use of the **pandas "at"** function. Instead, the data is being **parsed in a dictionary** and transformed to a dataframe in the end. For the experiment, a locally saved JSON file with only two days of data is read in. The data is equal to the data requested via the API. The test file can be found in the Git repository for reproducability.
 
 
 ```python
@@ -180,7 +173,7 @@ def parse_json_new(j):
     return data_twodays
 ```
 
-The new parsing is tested by using an offline saved .json export for reproducability of this part of the analysis. The file contains two days of data and is available in the repository. Following code is used to compare the time needed by the parsing functions:
+Following code is used to compare the time needed by the parsing functions:
 
 ```python
 with open ('test_json_2d.txt') as f:
@@ -203,10 +196,11 @@ print(f'{np.mean(faster)} times faster!!')
 
     25.576689731084194 times faster!!
     
-*TODO: include histogram plot and check numbers below*
+*TODO: UPDATE histogram plot and check numbers below*
+![png](parallel_hist.png)
 
-The code above conducted the parsing procedure 100 times since the performance is varying heavily in each iteration. It parses in each iteration once with the baseline parsing function and once with the new one. Then, it adds the time ration between the new and the old function to a list. The outcome is printed and also shown in the histogram plot: the new version is around **25 times faster in parsing** compared to the old one.
-Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing!
+The code above repeated the parsing procedure 100 times since the performance is varying heavily in each iteration. **It parses in each iteration once with the baseline parsing function and once with the new one.** Then, it adds the **time ratio between the new and the old function** to a list. The outcome is printed and also shown in the histogram plot shown above: the new version is around **25 times faster in parsing** compared to the old one.
+Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing! **TODO: update this time!!**
 
 ### Improve overall Performance by using Parallel Computation
 
