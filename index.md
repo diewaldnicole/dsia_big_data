@@ -50,6 +50,15 @@ def parse_json(j):
 
 ```python
 def baseline(days):
+    # init arrays for request timestamp
+    timespan=int(np.ceil((until_day + datetime.timedelta(days=1) - start_day).days/days))
+    period=datetime.timedelta(days = days, hours=0, minutes=0)
+    startdate_list=[]
+    for x in range(0, (timespan)):
+        startdate_list.append([datetime.datetime.combine(start_day, datetime.time(0, 0)) + period*x][0])
+        
+    # predefine dataframe
+    df_all = pd.DataFrame()
     # loop over list with startdates
     for requ_start in startdate_list:
         requ_end = requ_start + period - datetime.timedelta(minutes=1)
@@ -204,9 +213,9 @@ Looking back at the table from the varying time horizons, this means an improvem
 
 ### Improve overall Performance by using Parallel Computation
 
-An additional improvement in performance is expected if the process can be parallelized. Therefore, parallelization based on a Medium article (https://medium.com/@mjschillawski/quick-and-easy-parallelization-in-python-32cb9027e490) is tested. 
+An additional improvement in performance is expected if the **process can be parallelized**. Therefore, parallelization based on a Medium article (https://medium.com/@mjschillawski/quick-and-easy-parallelization-in-python-32cb9027e490) is tested, using the **Parallel package**.
 
-The block below uses the multiprocessing package to get the number of cores available on the hardware.
+The block below uses the multiprocessing package to show the number of cores available on the hardware.
 
 ```python
 import multiprocessing
@@ -216,6 +225,95 @@ from tqdm import tqdm
 num_cores = multiprocessing.cpu_count()
 print(f'{num_cores} Cores available!')
 ```
+
+    4 Cores available!
+    
+    
+In the code example below the syntax for a parallel for loop is shown. *inputs* defines the list over which should be iterated within the for loop, like a list or a pandas series. *my_function* defines the function that should be used and *processed_list* holds the result.
+
+```python
+processed_list = Parallel(n_jobs=num_cores)(delayed(my_function(i,parameters) for i in inputs)
+```
+
+The functionalilty is explained in the artice as follows:
+ 
+>"*delayed(my_function(i,parameters) for i in inputs) behind the scenes creates tuple of the function, i, and the parameters, one for each iteration. Delayed creates these >tuples, then Parallel will pass these to the interpreter.
+>Parallel(n_jobs=num_cores) does the heavy lifting of multiprocessing. Parallel forks the Python interpreter into a number of processes equal to the number of jobs (and by >extension, the number of cores available). Each process will run one iteration, and return the result.*"
+
+In the actual example, it is considered the best solution to parallelize a whole iteration, including the api request and parsing. So, **one parallelized computaion includes the computions for one startdate** in the list of startdates. This means that *startdate_list* is the *inputs* for the code sample above.
+
+As a next step, the parallelization is implemented for the existing code. The for loop over the startdates in the baseline function is drawn out to make an own function out of it, because this is the part that should be parallelized. Therefore: we have two functions now instead:
+- The *parallelized* function includes the computation for one start date
+- in the *baseline_new_parse* function there are the computations that are conducted for the overall dataframe or in preparation for the request, such as definining the list with start dates or the transfer to the local timezone.
+
+```python
+def parallelized(requ_start, period):
+    # predefine dataframe
+    df_all = pd.DataFrame()
+
+    requ_end = requ_start + period - datetime.timedelta(minutes=1)
+    delta = (requ_end + datetime.timedelta(minutes=1) -requ_start).days
+    
+    # get data from api
+    j = datapi_channels_fields(requ_start, requ_end, channels, pvsystemid)
+
+    # get tz
+    olson_tz = tz.gettz(j['Olson'])
+
+    # parse json to data frame & add timezone info (UTC)
+    data_twodays, interval = parse_json_new(j)
+
+    # add to overall data frame
+    df_all = pd.concat([df_all, data_twodays], sort=True)
+    
+    return df_all
+```
+
+
+```python
+def baseline_new_parse_parallel(days):
+    # init arrays for request timestamp
+    timespan=int(np.ceil((until_day + datetime.timedelta(days=1) - start_day).days/days))
+    period=datetime.timedelta(days = days, hours=0, minutes=0)
+    startdate_list=[]
+    for x in range(0, (timespan)):
+        startdate_list.append([datetime.datetime.combine(start_day, datetime.time(0, 0)) + period*x][0])
+
+    df_par = Parallel(n_jobs=num_cores)(delayed(parallelized)(i,period) for i in tqdm(startdate_list))
+        
+    df_all = pd.concat(df_par)
+    
+    olson_tz = 'Europe/Berlin'
+    # convert to local time
+    df_all = df_all.tz_convert(olson_tz)
+    
+    return df_all
+```
+The result from the Parallel computation is a dataframe with multiple entries, one for each startdate request. That is why *pd.concat* is used to have the data in one single dataframe. //TODO: is that right?
+
+```python
+df_timer = pd.DataFrame(index = ['60_days'], columns = ['summe_func_s'])
+
+starttime = timeit.default_timer()
+df_all, soa_api_requ, soa_parsing , soa_api_requ_days, soa_parsing_days = baseline_new_parse_parallel(60)
+summe = timeit.default_timer() - starttime
+
+df_timer.loc['60_days'] = [summe]
+
+print(tabulate(df_timer, headers='keys', tablefmt='psql'))
+```
+
+
+    +---------+----------------+
+    |         |   summe_func_s |
+    |---------+----------------|
+    | 60_days |        72.0806 |
+    +---------+----------------+
+    
+    
+//TODO insert result timer!
+
+So the code had to be adapted a little bit to enable the parallel computation. However, the changes where rather small and it can be seen that the time needed for the overall procedure could be **decreased to a half**! 
 
 ### Using Dask
 
