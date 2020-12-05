@@ -108,8 +108,7 @@ seconds per day of data | seconds for the overall request
 - | - 
 ![alt](th_per_day.png) | ![alt](th_sum.png)
 
-TODO: UPDATE plots and explanation! 
-The diagrams above show a request of **60 days** as the best option. (Altough there is not a really clear trend). The time needed for a request is increasing again for 120 days.
+The diagrams above show that there is not much difference of the time needed for the API request starting from 7 days at once. Requesting only 1 or 2 days however takes longer, most probably because the connection to the host has to be built up so many times. From the pictures and table above, a request of **60 days** seemts to be the best option. The time needed for a request is increasing again slightly for 120 days. The time for parsing should not be considered at this stage because to approach will change in the next chapter.
 
 ###  Improve parsing of json files
 
@@ -383,13 +382,19 @@ We want to check if we can speed the process up by using the Dask API for pandas
 
 ## Summary and Conclusion
 This analysis showed that there are multiple possibilities how to make python computations faster. Here are the key findings of this analysis and how much time could be saved with which approach:
-- In the baseline scenarion, the overall process took XX seconds (//TODO: 2_days plus saving!!)
-- The adapted time horizon in the API request could save XX seconds
-- The parsing was the biggest drawback of the old code version. Using a dictionary for parsing instead of the pandas *at* function saved XX seconds
-- The parallelization speeded up the process XX seconds more, therewith the computaion time was reduced by half
-- The parallel saving with dask instead the pandas dataframe saved XX more seconds
+- In the baseline scenarion, the overall process took 373 seconds
+- The adapted time horizon in the API request could save 20 seconds
+- The parsing was the biggest drawback of the old code version. Using a dictionary for parsing instead of the pandas *at* function saved 211 seconds
+- The parallelization speeded up the process 64 seconds more with the Parallel package and 48 with Dask delayed, the computaion time was reduced around half of it's time
+- When reading in the saved .csv file, pandas takes 0.1072 seconds whereas Dask takes only 0.0128 seconds, reducing it by a factor of ~8
 
-It was shown that the "grown" code which is adapted again and again over time needs some facelift every now and then, the tools above can help :)
+The bar charts below visualize the improvements:
+
+request and parsing | reading csv file
+- | - 
+![alt](comp.png) | ![alt](comp_read.png)
+
+It was shown that the "grown" code which is adapted again and again over time needs some facelift every now and then, and the tools above can help a lot!
 
 ### so... boost yourself to boost your code!
 When starting a new project one always has to weigh on if there should be an implementation available as fast as possible, or if the implementation should be long lasting and reusable also in future. Therefore, I suggest to spend at least some thoughts on what is the overall goal and if it would be better to spend more time in planning and specifications instead of just starting to code.
