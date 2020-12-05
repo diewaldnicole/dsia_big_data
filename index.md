@@ -206,13 +206,13 @@ for x in range(0,100):
 print(f'{np.mean(faster)} times faster!!')
 ```
 
-    25.576689731084194 times faster!!
+    25.19350641976238 times faster!!
     
-*TODO: UPDATE histogram plot and check numbers below*
 ![png](parallel_hist.png)
+![png](time_new_parse.png)
 
 The code above repeated the parsing procedure 100 times since the performance is varying heavily in each iteration. **It parses in each iteration once with the baseline parsing function and once with the new one.** Then, it adds the **time ratio between the new and the old function** to a list. The outcome is printed below the code block and also shown in the histogram plot above: the new version is around **25 times faster in parsing** compared to the old one.
-Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing! **//TODO: update this time!!**
+Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing!
 
 ### Improve overall Performance by using Parallel Computation
 
@@ -292,7 +292,7 @@ def baseline_new_parse_parallel(days):
     
     return df_all
 ```
-The result from the parallel computation is a dataframe with multiple entries, one for each startdate request. That is why *pd.concat* is used to have the data in one single dataframe. //TODO: is that right?
+The result from the parallel computation is a dataframe with multiple entries, one for each startdate request. That is why *pd.concat* is used to have the data in one single dataframe.
 
 ```python
 df_timer = pd.DataFrame(index = ['60_days'], columns = ['summe_func_s'])
@@ -306,15 +306,13 @@ df_timer.loc['60_days'] = [summe]
 print(tabulate(df_timer, headers='keys', tablefmt='psql'))
 ```
 
-
     +---------+----------------+
     |         |   summe_func_s |
     |---------+----------------|
-    | 60_days |        72.0806 |
+    | 60_days |        78.1577 |
     +---------+----------------+
     
     
-// TODO_UPDATE
 So the code had to be adapted a little bit to enable the parallel computation. However, the changes where rather small and it can be seen that the time needed for the overall procedure could be **decreased to a half**! 
 
 ### Using Dask
@@ -355,7 +353,7 @@ Computation time for the whole request and parsing process:
     +---------+----------------+
     |         |   summe_func_s |
     |---------+----------------|
-    | 60_days |        78.2897 |
+    | 60_days |        94.8234 |
     +---------+----------------+
 ```
     
