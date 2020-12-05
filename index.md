@@ -390,7 +390,7 @@ This analysis showed that there are multiple possibilities how to make python co
 
 The bar charts below visualize the improvements:
 
-request and parsing | reading csv file
+time for request and parsing [s] | time for reading csv file [s]
 - | - 
 ![alt](comp.png) | ![alt](comp_read.png)
 
