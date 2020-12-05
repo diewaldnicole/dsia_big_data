@@ -396,8 +396,8 @@ It was shown that the "grown" code which is adapted again and again over time ne
 When starting a new project one always has to weigh on if there should be an implementation available as fast as possible, or if the implementation should be long lasting and reusable also in future. Therefore, I suggest to spend at least some thoughts on what is the overall goal and if it would be better to spend more time in planning and specifications instead of just starting to code.
 
 However, this is the process of learning and self improvement, and no perfect result can exist without having had some iterations and making failures. Therefore I want to finish this artice with a quotation (in german):
-> *"Und doch, ist nicht dies das Leben -? ich glaube: daß aus so viel dürftigen, bangen, kleinlichen und schmählichen Einzelheiten sich am Ende doch ein großartiges Ganzes zusammensetzt, das ja nicht wäre, wenn wirs verstünden und leisteten, sondern an dem wir mit unserem Können und unserem Mißlingen gleich weit beteiligt sind."*
-> *- Rainer Maria Rilke*
+> "*Und doch, ist nicht dies das Leben -? ich glaube: daß aus so viel dürftigen, bangen, kleinlichen und schmählichen Einzelheiten sich am Ende doch ein großartiges Ganzes zusammensetzt, das ja nicht wäre, wenn wirs verstünden und leisteten, sondern an dem wir mit unserem Können und unserem Mißlingen gleich weit beteiligt sind.*"
+> *-- Rainer Maria Rilke --*
 
 
 ![thoughtful](raymond-revaldi-QA6z7PtEeig-unsplash.jpg)
