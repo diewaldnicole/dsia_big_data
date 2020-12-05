@@ -358,27 +358,37 @@ Computation time for the whole request and parsing process:
     
 The **result is similar to the one from the Parallel package**, but some seconds slower. So for this strategy for making use of parallel computation both packages are **very useful and almost equally fast**. For other use cases where directly a pandas dataframe computation should be speeded up, dask seems very easy to use. We will try this when saving the data to a .csv file.
 
-### Saving to .csv
-Here follows a short chapter on saving the dataframe to a .csv file on the disk.
+### Reading from .csv file
+The dataframe is saved into a .csv file. We want to make a last comparison on reading the file in again using Pandas vs. Dask:
 
-**Benchmark**
-The benchmark used the standard *pd.to_csv* function to save the file. The computation time is shown below.
 
 ```python
-# save file
-print("saving...")
-starttime = timeit.default_timer()
-df_all.to_csv(filename, sep=';', decimal=',')
-soa_saving = timeit.default_timer() - starttime
-print("DONE")
-print(soa_saving)
+# Pandas Baseline
+faster = []
+for x in range(0,100):
+    starttime = timeit.default_timer()
+    df = pd.read_csv(filename, sep=';', decimal=',')
+    soa_reading = timeit.default_timer() - starttime
+    faster.append(soa_reading)
+print(np.mean(faster))
 ```
-
+    0.10717443900000945
     
-**Using Dask**
-We want to check if we can speed the process up by using the Dask API for pandas dataframe:
-
-
+```python
+# Dask Improvements
+import dask.dataframe as dd
+faster = []
+for x in range(0,100):
+    starttime = timeit.default_timer()
+    df = dd.read_csv(filename, sep=';', decimal=',')
+    soa_reading = timeit.default_timer() - starttime
+    faster.append(soa_reading)
+print(np.mean(faster))
+```
+    0.012823589000045104
+     
+The only difference in code is that *dd* (dask.dataframe) is used instead of *pd* (pandas.DataFrame). The reading is around 8 times faster using Dask!
+ 
 
 ## Summary and Conclusion
 This analysis showed that there are multiple possibilities how to make python computations faster. Here are the key findings of this analysis and how much time could be saved with which approach:
