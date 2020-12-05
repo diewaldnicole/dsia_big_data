@@ -402,7 +402,7 @@ The bar charts below visualize the improvements:
 
 time for request and parsing [s] | time for reading csv file [s]
 - | - 
-![alt](comp.png) | ![alt](comp_read.png)
+![alt](img/comp.png) | ![alt](img/comp_read.png)
 
 It was shown that the "grown" code which is adapted again and again over time needs some facelift every now and then, and the tools above can help a lot!
 
@@ -414,5 +414,5 @@ However, this is the process of learning and self improvement, and no perfect re
 > *-- Rainer Maria Rilke --*
 
 
-![thoughtful](raymond-revaldi-QA6z7PtEeig-unsplash.jpg)
+![thoughtful](img/raymond-revaldi-QA6z7PtEeig-unsplash.jpg)
 
