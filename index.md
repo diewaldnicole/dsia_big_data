@@ -108,7 +108,7 @@ seconds per day of data | seconds for the overall request
 - | - 
 ![alt](img/th_per_day.png) | ![alt](img/th_sum.png)
 
-The diagrams above show that there is not much difference of the time needed for the API request starting from 7 days at once. Requesting only 1 or 2 days however takes longer, most probably because the connection to the host has to be built up so many times. From the pictures and table above, a request of **60 days** seemts to be the best option. The time needed for a request is increasing again slightly for 120 days. The time for parsing should not be considered at this stage because to approach will change in the next chapter.
+The diagrams above show that there is not much difference of the time needed for the API request starting from 7 days at once. Requesting only 1 or 2 days however takes longer, most probably because the connection to the host has to be built up so many times. From the pictures and table above, a request of **60 days** seems to be the best option. The time needed for a request is increasing again slightly for 120 days. The time for parsing should not be considered at this stage because to approach will change in the next chapter.
 
 ###  Improve parsing of json files
 
