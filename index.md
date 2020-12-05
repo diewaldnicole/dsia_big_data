@@ -146,7 +146,9 @@ The JSON string retrieved from the API is **nested** and therefore not easy to p
 }
 ```
 
-It contains the "Records" with all the required data, and the **timezone** ("Olson"). The timezone is needed to convert the data to local time from UTC. One **ChannelType** should be one column, the **LogDt** should be the datetime index. There is also a **NodeType** which enumerates the number of the inverter in the PvSystem. If there are multiple inverters in the system, the UACMeanL1 channel exists multiple times, once for each inverter and therefore there must be a column in the dataframe depending on the ChannelType AND NodeType combination. Also the **Unit** is an important information to be added to the export file.
+It contains the "Records" with all the required data, and the **timezone** ("Olson"). The timezone is needed to convert the data to local time from UTC. One **ChannelType** should be one column, the **LogDt** should be the datetime index. There is also a **NodeType** which enumerates the number of the inverter in the PvSystem. If there are multiple inverters in the system, the UACMeanL1 channel exists multiple times, once for each inverter and therefore there must be a column in the dataframe depending on the ChannelType AND NodeType combination. Also the **Unit** is an important information to be added to the export file. The image below shows a sample how the data and headers should look like after parsing:
+
+//TODO image of data frame with data!
 
 The **procedure of the initial solution** works as follows:
 1. data of two days is requested
@@ -208,8 +210,8 @@ print(f'{np.mean(faster)} times faster!!')
 *TODO: UPDATE histogram plot and check numbers below*
 ![png](parallel_hist.png)
 
-The code above repeated the parsing procedure 100 times since the performance is varying heavily in each iteration. **It parses in each iteration once with the baseline parsing function and once with the new one.** Then, it adds the **time ratio between the new and the old function** to a list. The outcome is printed and also shown in the histogram plot shown above: the new version is around **25 times faster in parsing** compared to the old one.
-Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing! **TODO: update this time!!**
+The code above repeated the parsing procedure 100 times since the performance is varying heavily in each iteration. **It parses in each iteration once with the baseline parsing function and once with the new one.** Then, it adds the **time ratio between the new and the old function** to a list. The outcome is printed below the code block and also shown in the histogram plot above: the new version is around **25 times faster in parsing** compared to the old one.
+Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing! **//TODO: update this time!!**
 
 ### Improve overall Performance by using Parallel Computation
 
@@ -240,9 +242,9 @@ The functionalilty is explained in the artice as follows:
 > "*delayed(my_function(i,parameters) for i in inputs) behind the scenes creates tuple of the function, i, and the parameters, one for each iteration. Delayed creates these tuples, then Parallel will pass these to the interpreter.
 > Parallel(n_jobs=num_cores) does the heavy lifting of multiprocessing. Parallel forks the Python interpreter into a number of processes equal to the number of jobs (and by extension, the number of cores available). Each process will run one iteration, and return the result.*"
 
-In the actual example, it is considered the best solution to parallelize a whole iteration, including the api request and parsing. So, **one parallelized computaion includes the computions for one startdate** in the list of startdates. This means that *startdate_list* is the *inputs* for the code sample above.
+In the actual example, it is considered the best solution to parallelize a whole iteration, including the api request and parsing. So, **one parallelized computation includes the computions for one startdate** in the list of startdates. This means that *startdate_list* is the *inputs* for the code sample above.
 
-As a next step, the parallelization is implemented for the existing code. The for loop over the startdates in the baseline function is drawn out to make an own function out of it, because this is the part that should be parallelized. Therefore: we have two functions now instead:
+As a next step, the parallelization is implemented for the existing code. The for loop over the startdates in the baseline function is drawn out to make an own function out of it, because this is the part that should be parallelized. Therefore, we have two functions now instead of one:
 - The *parallelized* function includes the computation for one start date
 - in the *baseline_new_parse* function there are the computations that are conducted for the overall dataframe or in preparation for the request, such as definining the list with start dates or the transfer to the local timezone.
 
@@ -289,7 +291,7 @@ def baseline_new_parse_parallel(days):
     
     return df_all
 ```
-The result from the Parallel computation is a dataframe with multiple entries, one for each startdate request. That is why *pd.concat* is used to have the data in one single dataframe. //TODO: is that right?
+The result from the parallel computation is a dataframe with multiple entries, one for each startdate request. That is why *pd.concat* is used to have the data in one single dataframe. //TODO: is that right?
 
 ```python
 df_timer = pd.DataFrame(index = ['60_days'], columns = ['summe_func_s'])
@@ -327,13 +329,13 @@ Another possibility to make use of parallel computation is using the **Dask Pack
 
 ![dask](dask_pandas2.png)
 
-For the actual example, instead of using the dask API to the dataframe, we use the **delayed function**, since we want to parallelize a whole for loop with multiple steps. There is again a very straightforward explanation in the [documentation](https://docs.dask.org/en/latest/delayed.html):
+For the actual example, instead of using the dask API to the dataframe, we use the **delayed function**, since we want to parallelize a whole for loop with multiple steps. There is again a very straightforward explanation in the [documentation](https://docs.dask.org/en/latest/delayed.html) for this use case:
 
 > Sometimes problems don’t fit into one of the collections like dask.array or dask.dataframe. In these cases, users can parallelize custom algorithms using the simpler dask.delayed interface. This allows one to create graphs directly with a light annotation of normal python code:
 
 ![dask](dask_delayed.png)
 
-The syntax is very similar to the parallel package and can be implemented as is the snippet below:
+The syntax is very similar to the parallel package and can be implemented as shown in the snippet below:
 
 ```python
     results = []
@@ -359,26 +361,21 @@ Computation time for the whole request and parsing process:
 The **result is similar to the one from the Parallel package**, but some seconds slower. So for this strategy for making use of parallel computation both packages are **very useful and almost equally fast**. For other use cases where directly a pandas dataframe computation should be speeded up, dask seems very easy to use. We will try this when saving the data to a .csv file.
 
 ### Saving to .csv
-Here follows a slow chapter on saving the dataframe to a .csv file on the disk.
+Here follows a short chapter on saving the dataframe to a .csv file on the disk.
 
 **Benchmark**
 The benchmark used the standard *pd.to_csv* function to save the file. The computation time is shown below.
 
 ```python
-starttime = timeit.default_timer()
-
 # save file
 print("saving...")
+starttime = timeit.default_timer()
 df_all.to_csv(filename, sep=';', decimal=',')
-print("DONE")
-
 soa_saving = timeit.default_timer() - starttime
+print("DONE")
 print(soa_saving)
 ```
 
-    saving...
-    DONE
-    2.132442699999956
     
 **Using Dask**
 We want to check if we can speed the process up by using the Dask API for pandas dataframe:
@@ -386,47 +383,28 @@ We want to check if we can speed the process up by using the Dask API for pandas
 
 
 ## Summary and Conclusion
-### General
-### Boost yourself to boost your code
+This analysis showed that there are multiple possibilities how to make python computations faster. Here are the key findings of this analysis and how much time could be saved with which approach:
+- In the baseline scenarion, the overall process took XX seconds (//TODO: 2_days plus saving!!)
+- The adapted time horizon in the API request could save XX seconds
+- The parsing was the biggest drawback of the old code version. Using a dictionary for parsing instead of the pandas *at* function saved XX seconds
+- The parallelization speeded up the process XX seconds more, therewith the computaion time was reduced by half
+- The parallel saving with dask instead the pandas dataframe saved XX more seconds
+
+It was shown that the "grown" code which is adapted again and again over time needs some facelift every now and then, the tools above can help :)
+
+### so... boost yourself to boost your code!
+When starting a new project one always has to weigh on if there should be an implementation available as fast as possible, or if the implementation should be long lasting and reusable also in future. Therefore, I suggest to spend at least some thoughts on what is the overall goal and if it would be better to spend more time in planning and specifications instead of just starting to code.
+
+However, this is the process of learning and self improvement, and no perfect result can exist without having had some iterations and making failures. Therefore I want to finish this artice with a quotation (in german):
+> "*Und doch, ist nicht dies das Leben -? ich glaube: daß
+> aus so viel dürftigen, bangen, kleinlichen und schmäh-
+> lichen Einzelheiten sich am Ende doch ein großartiges
+> Ganzes zusammensetzt, das ja nicht wäre, wenn wirs
+> verstünden und leisteten, sondern an dem wir mit un-
+> serem Können und unserem Mißlingen gleich weit be-
+> teiligt sind."
+> - Rainer Maria Rilke*
+
 
 ![thoughtful](raymond-revaldi-QA6z7PtEeig-unsplash.jpg)
 
-
-
-# delete
-
-You can use the [editor on GitHub](https://github.com/diewaldnicole/dsia_big_data/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/diewaldnicole/dsia_big_data/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
