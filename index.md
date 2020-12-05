@@ -359,7 +359,7 @@ Computation time for the whole request and parsing process:
 The **result is similar to the one from the Parallel package**, but some seconds slower. So for this strategy for making use of parallel computation both packages are **very useful and almost equally fast**. For other use cases where directly a pandas dataframe computation should be speeded up, dask seems very easy to use. We will try this when saving the data to a .csv file.
 
 ### Reading from .csv file
-The dataframe is saved into a .csv file. We want to make a last comparison on reading the file in again using Pandas vs. Dask:
+The dataframe is saved into a .csv file. We want to make a **last comparison on reading the file** in again using **Pandas vs. Dask**:
 
 
 ```python
@@ -387,7 +387,7 @@ print(np.mean(faster))
 ```
     0.012823589000045104
      
-The only difference in code is that *dd* (dask.dataframe) is used instead of *pd* (pandas.DataFrame). The reading is around 8 times faster using Dask!
+The only difference in code is that *dd* (dask.dataframe) is used instead of *pd* (pandas.DataFrame). The **reading is around 8 times faster using Dask**!
  
 
 ## Summary and Conclusion
