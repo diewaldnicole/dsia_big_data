@@ -148,7 +148,8 @@ The JSON string retrieved from the API is **nested** and therefore not easy to p
 
 It contains the "Records" with all the required data, and the **timezone** ("Olson"). The timezone is needed to convert the data to local time from UTC. One **ChannelType** should be one column, the **LogDt** should be the datetime index. There is also a **NodeType** which enumerates the number of the inverter in the PvSystem. If there are multiple inverters in the system, the UACMeanL1 channel exists multiple times, once for each inverter and therefore there must be a column in the dataframe depending on the ChannelType AND NodeType combination. Also the **Unit** is an important information to be added to the export file. The image below shows a sample how the data and headers should look like after parsing:
 
-//TODO image of data frame with data!
+![png](dataframe.png)
+
 
 The **procedure of the initial solution** works as follows:
 1. data of two days is requested
@@ -395,7 +396,7 @@ It was shown that the "grown" code which is adapted again and again over time ne
 ### so... boost yourself to boost your code!
 When starting a new project one always has to weigh on if there should be an implementation available as fast as possible, or if the implementation should be long lasting and reusable also in future. Therefore, I suggest to spend at least some thoughts on what is the overall goal and if it would be better to spend more time in planning and specifications instead of just starting to code.
 
-However, this is the process of learning and self improvement, and no perfect result can exist without having had some iterations and making failures. Therefore I want to finish this artice with a quotation (in german):
+However, this is the process of learning and self improvement, and no perfect result can exist without having had some iterations and making failures. Therefore I want to finish this article with a (german) quotation:
 > "*Und doch, ist nicht dies das Leben -? ich glaube: daß aus so viel dürftigen, bangen, kleinlichen und schmählichen Einzelheiten sich am Ende doch ein großartiges Ganzes zusammensetzt, das ja nicht wäre, wenn wirs verstünden und leisteten, sondern an dem wir mit unserem Können und unserem Mißlingen gleich weit beteiligt sind.*"
 > *-- Rainer Maria Rilke --*
 
