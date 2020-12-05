@@ -1,4 +1,4 @@
-![fast](img\anders-jilden--N2UXcPBIYI-unsplash_small.jpg)
+![fast](img/anders-jilden--N2UXcPBIYI-unsplash_small.jpg)
 
 # Small Data
 ## How to speed up your application without the need for big data technologies?
@@ -13,7 +13,7 @@ The work is showing how and how much I could improve...
 
 *...and saving it into a .csv file?*
 
-![png](flowchart_small_data.png)
+![png](img/flowchart_small_data.png)
 
 ### Initial Thoughts and Plan
 - Analysis of the state of the Art - which part takes how much time?
@@ -102,11 +102,11 @@ The table below shows the difference of the time needed for the **API request** 
 - *parsing/api* is the ratio between parsing and the api duration sums
 - *summe_s* is the overall sum to get the data back as a data frame
 
-![png](time_horizons.png)
+![png](img/time_horizons.png)
 
 seconds per day of data | seconds for the overall request
 - | - 
-![alt](th_per_day.png) | ![alt](th_sum.png)
+![alt](img/th_per_day.png) | ![alt](img/th_sum.png)
 
 The diagrams above show that there is not much difference of the time needed for the API request starting from 7 days at once. Requesting only 1 or 2 days however takes longer, most probably because the connection to the host has to be built up so many times. From the pictures and table above, a request of **60 days** seemts to be the best option. The time needed for a request is increasing again slightly for 120 days. The time for parsing should not be considered at this stage because to approach will change in the next chapter.
 
@@ -147,7 +147,7 @@ The JSON string retrieved from the API is **nested** and therefore not easy to p
 
 It contains the "Records" with all the required data, and the **timezone** ("Olson"). The timezone is needed to convert the data to local time from UTC. One **ChannelType** should be one column, the **LogDt** should be the datetime index. There is also a **NodeType** which enumerates the number of the inverter in the PvSystem. If there are multiple inverters in the system, the UACMeanL1 channel exists multiple times, once for each inverter and therefore there must be a column in the dataframe depending on the ChannelType AND NodeType combination. Also the **Unit** is an important information to be added to the export file. The image below shows a sample how the data and headers should look like after parsing:
 
-![png](dataframe.png)
+![png](img/dataframe.png)
 
 
 The **procedure of the initial solution** works as follows:
@@ -207,8 +207,8 @@ print(f'{np.mean(faster)} times faster!!')
 
     25.19350641976238 times faster!!
     
-![png](parallel_hist.png)
-![png](time_new_parse.png)
+![png](img/parallel_hist.png)
+![png](img/time_new_parse.png)
 
 The code above repeated the parsing procedure 100 times since the performance is varying heavily in each iteration. **It parses in each iteration once with the baseline parsing function and once with the new one.** Then, it adds the **time ratio between the new and the old function** to a list. The outcome is printed below the code block and also shown in the histogram plot above: the new version is around **25 times faster in parsing** compared to the old one.
 Looking back at the table from the varying time horizons, this means an improvement from ~200 down to 8 seconds for parsing!
@@ -320,18 +320,18 @@ Another possibility to make use of parallel computation is using the **Dask Pack
 > **Design**
 > Dask DataFrames coordinate many Pandas DataFrames/Series arranged along the index. A Dask DataFrame is partitioned row-wise, grouping rows by index value for efficiency. These Pandas objects may live on disk or on other machines.
 
-![dask](dask_pandas.png)
+![dask](img/dask_pandas.png)
 
 > **Dask DataFrame copies the Pandas API**
 > Because the dask.dataframe application programming interface (API) is a subset of the Pandas API, it should be familiar to Pandas users. There are some slight alterations due to the parallel nature of Dask:
 
-![dask](dask_pandas2.png)
+![dask](img/dask_pandas2.png)
 
 For the actual example, instead of using the dask API to the dataframe, we use the **delayed function**, since we want to parallelize a whole for loop with multiple steps. There is again a very straightforward explanation in the [documentation](https://docs.dask.org/en/latest/delayed.html) for this use case:
 
 > Sometimes problems don’t fit into one of the collections like dask.array or dask.dataframe. In these cases, users can parallelize custom algorithms using the simpler dask.delayed interface. This allows one to create graphs directly with a light annotation of normal python code:
 
-![dask](dask_delayed.png)
+![dask](img/dask_delayed.png)
 
 The syntax is very similar to the parallel package and can be implemented as shown in the snippet below:
 
