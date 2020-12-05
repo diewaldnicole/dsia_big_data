@@ -32,7 +32,7 @@ In order to have a **baseline for comparison**, at first the existing functions 
 
 The script is based on an older version starting from a time with no python knowledge at all, and and was evolving over time. For example, is was taken as a given fact that only two days at once can be retrieved from the API, based on an older version of this API. However, this restriction changed and also longer time horizons can be retrieved at once now. The 'baseline' function is already adapted in a way so that it supports later used varying time horizons (days to request at once).
 
-The **benchmark time** for this initial version can be found in the later chapter 1.2.1.
+The **benchmark time** for this initial version can be found in the **later chapter 1.2.1**.
 
 ```python
 def parse_json(j):
@@ -84,7 +84,7 @@ In order to improve the performance of this application, at first it has to be f
 
 ### Improve Performance of REST API request by varying request time horizons
 
-Firstly, the **time horizon for the request is varied** - so that not only just two days at once are retrieved from the API, but also longer time horizons. Therefore, the initial baseline function is adapted to enable this time horizons instead of a hard coded two days interval. **The 2_days result is the benchmark for the analysis**.
+Firstly, the **time horizon for the request is varied** - so that not only just two days at once are retrieved from the API, but also longer time horizons. Therefore, the initial baseline function is adapted to enable this time horizons instead of a hard coded two days interval. **The 2_days result is the benchmark time for the analysis**. The code below defines a list with the time horizons used for comparison.
 
 ```python
 # define a list of varying time horizons for the request
@@ -104,7 +104,7 @@ The table below shows the difference of the time needed for the **API request** 
 
 ![png](time_horizons.png)
 
-A | B
+seconds per day of data | seconds for the overall request
 - | - 
 ![alt](th_per_day.png) | ![alt](th_sum.png)
 
